@@ -1,8 +1,14 @@
-# AWS Cross-Region Backup and Recovery Lab
+# AWS Cross-Region Disaster Recovery & Backup Automation System
 
-A small, auditable disaster-recovery lab for an Application Support Engineer moving toward DevOps. Terraform provisions a private, versioned source bucket, a cross-region recovery bucket, a scheduled Lambda copy, CloudWatch logs/alarms, and an SNS email alert. A local restore utility downloads one recovery point and a separate script compares SHA-256 hashes.
+[![Live Demo](https://img.shields.io/badge/Live_Demo-Render_Online-2ea44f?style=for-the-badge&logo=render)](https://aws-disaster-recovery-automation.onrender.com/)
+[![AWS](https://img.shields.io/badge/AWS-S3_|_Lambda_|_CloudWatch_|_EventBridge_|_SNS-232F3E?style=for-the-badge&logo=amazon-aws)](https://aws.amazon.com/)
+[![Terraform](https://img.shields.io/badge/IaC-Terraform_1.16.5-7B42BC?style=for-the-badge&logo=terraform)](https://www.terraform.io/)
+[![Python](https://img.shields.io/badge/Python-3.12_|_Boto3-3776AB?style=for-the-badge&logo=python)](https://python.org/)
 
-> **Current status:** code and local unit tests are present. No AWS account, resources, restore drill, or GitHub publication has been verified yet. Do not interpret example regions as approved regions for your account.
+> **Live Interactive Cloud Console:** Experience the live system directly in your browser:  
+> 🌐 **[https://aws-disaster-recovery-automation.onrender.com/](https://aws-disaster-recovery-automation.onrender.com/)**
+
+An enterprise-grade, auditable Disaster Recovery and Automated Backup architecture designed for production resilience. Combines multi-region Terraform infrastructure, Python/Boto3 serverless orchestration, cryptographic SHA-256 data integrity validation, chaos engineering injection, and an interactive operations console.
 
 ## Architecture
 

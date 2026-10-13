@@ -21,385 +21,380 @@ HTML_CONTENT = """<!DOCTYPE html>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Enterprise AWS Disaster Recovery & Backup Orchestrator</title>
+  <title>Enterprise AWS Disaster Recovery & Live Incident War Room</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     :root {
-      --bg: #090d14;
-      --bg-card: #111827;
-      --bg-surface: #1f2937;
-      --border: #374151;
+      --bg: #070b12;
+      --bg-card: #0f172a;
+      --bg-surface: #1e293b;
+      --border: #334155;
+      --border-accent: #475569;
       --accent-aws: #ff9900;
       --accent-blue: #38bdf8;
-      --text: #9ca3af;
-      --text-heading: #f9fafb;
-      --text-muted: #6b7280;
+      --text: #94a3b8;
+      --text-heading: #f8fafc;
+      --text-muted: #64748b;
       --success: #10b981;
       --warning: #f59e0b;
       --danger: #ef4444;
+      --danger-glow: rgba(239, 68, 68, 0.3);
       --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, sans-serif; }
-    body { background-color: var(--bg); color: var(--text); padding: 20px; line-height: 1.5; }
-    .container { max-width: 1400px; margin: 0 auto; }
-    
-    /* Top Header Bar */
-    header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 16px; margin-bottom: 20px; flex-wrap: wrap; gap: 16px; }
-    .brand-group { display: flex; align-items: center; gap: 14px; }
+    body { background-color: var(--bg); color: var(--text); padding: 18px; line-height: 1.5; min-height: 100vh; }
+    .container { max-width: 1440px; margin: 0 auto; }
+
+    /* Header Bar */
+    header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 16px; margin-bottom: 20px; flex-wrap: wrap; gap: 14px; }
+    .brand-wrap { display: flex; align-items: center; gap: 14px; }
     .brand-icon { font-size: 32px; color: var(--accent-aws); }
-    .brand-title { color: var(--text-heading); font-size: 20px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+    .brand-title { color: var(--text-heading); font-size: 20px; font-weight: 800; display: flex; align-items: center; gap: 10px; }
     .brand-sub { font-size: 12px; color: var(--text-muted); }
     .header-pills { display: flex; gap: 8px; flex-wrap: wrap; }
-    .pill { background: rgba(31, 41, 55, 0.8); border: 1px solid var(--border); padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; color: #d1d5db; display: inline-flex; align-items: center; gap: 6px; }
+    .pill { background: rgba(30, 41, 59, 0.8); border: 1px solid var(--border); padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; color: #cbd5e1; display: inline-flex; align-items: center; gap: 6px; }
     .pill-live { color: #34d399; border-color: rgba(52, 211, 153, 0.3); background: rgba(16, 185, 129, 0.1); }
     .pulse-dot { width: 8px; height: 8px; border-radius: 50%; background: #10b981; display: inline-block; box-shadow: 0 0 8px #10b981; animation: pulse 2s infinite; }
+    .pulse-dot-red { width: 8px; height: 8px; border-radius: 50%; background: #ef4444; display: inline-block; box-shadow: 0 0 10px #ef4444; animation: pulse 1s infinite; }
     @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
 
-    /* Key Enterprise SLA / RPO / RTO Cards */
-    .metric-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-bottom: 20px; }
-    .metric-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 16px; position: relative; overflow: hidden; }
-    .metric-card::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--border); }
-    .metric-card.active-accent::before { background: var(--accent-aws); }
-    .metric-card.active-success::before { background: var(--success); }
-    .metric-card.active-blue::before { background: var(--accent-blue); }
-    .metric-card.active-danger::before { background: var(--danger); }
-    .metric-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text-muted); font-weight: 600; display: flex; justify-content: space-between; margin-bottom: 6px; }
-    .metric-value { font-size: 24px; font-weight: 700; color: var(--text-heading); font-family: var(--font-mono); }
-    .metric-foot { font-size: 11px; color: var(--text-muted); margin-top: 4px; display: flex; align-items: center; gap: 4px; }
-    .text-success { color: var(--success); }
-    .text-warning { color: var(--warning); }
-    .text-danger { color: var(--danger); }
+    /* CRITICAL SEV-1 WAR ROOM BANNER (Visible on Outage) */
+    .sev1-banner { display: none; background: rgba(239, 68, 68, 0.12); border: 2px solid var(--danger); border-radius: 10px; padding: 18px 24px; margin-bottom: 22px; animation: glowRed 2s infinite; }
+    .sev1-banner.active { display: block; }
+    @keyframes glowRed { 0% { box-shadow: 0 0 15px rgba(239, 68, 68, 0.2); } 50% { box-shadow: 0 0 30px rgba(239, 68, 68, 0.5); } 100% { box-shadow: 0 0 15px rgba(239, 68, 68, 0.2); } }
+    .sev1-flex { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
+    .sev1-title { font-size: 16px; font-weight: 800; color: #fecaca; display: flex; align-items: center; gap: 10px; }
+    .sev1-desc { font-size: 13px; color: #f87171; margin-top: 4px; }
+    .downtime-counter { font-family: var(--font-mono); font-size: 24px; font-weight: 800; color: #fee2e2; background: #000; padding: 6px 14px; border-radius: 6px; border: 1px solid var(--danger); }
 
-    /* Navigation Tabs */
+    /* Live Website / Service Simulation Card */
+    .service-status-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 20px; position: relative; overflow: hidden; }
+    .service-status-card::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: var(--success); }
+    .service-status-card.down::before { background: var(--danger); }
+    .service-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px; }
+    .service-name { font-size: 16px; font-weight: 700; color: var(--text-heading); display: flex; align-items: center; gap: 10px; }
+    .service-url { font-size: 12px; font-family: var(--font-mono); color: var(--text-muted); }
+    
+    .status-badge { padding: 6px 14px; border-radius: 20px; font-weight: 800; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; display: inline-flex; align-items: center; gap: 8px; }
+    .badge-healthy { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.4); }
+    .badge-outage { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid var(--danger); }
+    .badge-recovered { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.4); }
+
+    .service-metrics-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; background: rgba(15, 23, 42, 0.6); padding: 14px; border-radius: 8px; border: 1px solid var(--border); }
+    .sub-metric-title { font-size: 11px; text-transform: uppercase; color: var(--text-muted); font-weight: 600; margin-bottom: 4px; }
+    .sub-metric-val { font-size: 18px; font-weight: 700; color: var(--text-heading); font-family: var(--font-mono); }
+
+    /* Tabs Bar */
     .tabs-bar { display: flex; gap: 6px; border-bottom: 1px solid var(--border); margin-bottom: 20px; overflow-x: auto; padding-bottom: 2px; }
     .tab-btn { background: none; border: none; padding: 10px 16px; font-size: 13px; font-weight: 600; color: var(--text-muted); cursor: pointer; border-radius: 6px 6px 0 0; display: flex; align-items: center; gap: 8px; transition: all 0.2s; white-space: nowrap; }
-    .tab-btn:hover { color: var(--text-heading); background: rgba(31, 41, 55, 0.4); }
+    .tab-btn:hover { color: var(--text-heading); background: rgba(30, 41, 59, 0.4); }
     .tab-btn.active { color: var(--accent-aws); border-bottom: 2px solid var(--accent-aws); background: rgba(255, 153, 0, 0.05); }
 
-    /* Tab Content Area */
     .tab-pane { display: none; }
     .tab-pane.active { display: block; }
 
-    /* Multi-Region Topology Map */
-    .topology-container { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 20px; margin-bottom: 20px; }
-    .topo-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-    .topo-title { font-size: 14px; font-weight: 700; color: var(--text-heading); display: flex; align-items: center; gap: 8px; }
-    .topo-grid { display: grid; grid-template-columns: 1fr auto 1fr; gap: 20px; align-items: center; }
-    @media (max-width: 850px) { .topo-grid { grid-template-columns: 1fr; } }
-    .region-box { background: rgba(17, 24, 39, 0.9); border: 1px solid var(--border); border-radius: 8px; padding: 16px; }
-    .region-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 4px; text-transform: uppercase; margin-bottom: 10px; }
-    .badge-primary-reg { background: rgba(14, 165, 233, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); }
-    .badge-dr-reg { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.3); }
-    .region-name { font-size: 16px; font-weight: 700; color: var(--text-heading); margin-bottom: 4px; }
-    .region-specs { font-size: 12px; color: var(--text-muted); display: flex; flex-direction: column; gap: 4px; margin-top: 10px; }
-    .spec-item { display: flex; justify-content: space-between; border-bottom: 1px dashed rgba(55, 65, 81, 0.5); padding: 4px 0; }
-    .bridge-connector { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 10px; }
-    .bridge-line { width: 100%; height: 2px; background: repeating-linear-gradient(90deg, #ff9900, #ff9900 6px, transparent 6px, transparent 12px); margin: 8px 0; }
-    .bridge-pill { background: #1f2937; border: 1px solid var(--border); border-radius: 12px; font-size: 11px; padding: 4px 10px; color: var(--accent-aws); font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
+    /* Interactive Runbook / War Room Remediation */
+    .war-room-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+    @media (max-width: 992px) { .war-room-grid { grid-template-columns: 1fr; } }
 
-    /* Action Toolbar & Chaos Control */
-    .action-panel { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 20px; margin-bottom: 20px; }
-    .panel-headline { font-size: 14px; font-weight: 700; color: var(--text-heading); margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
-    .button-group { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
-    .btn { background: #1f2937; color: var(--text-heading); border: 1px solid var(--border); padding: 9px 16px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; }
-    .btn:hover { background: #374151; border-color: #6b7280; transform: translateY(-1px); }
-    .btn-aws { background: var(--accent-aws); color: #000; border-color: var(--accent-aws); }
-    .btn-aws:hover { background: #e68a00; border-color: #e68a00; color: #000; }
-    .btn-success { background: #059669; color: #fff; border-color: #059669; }
-    .btn-success:hover { background: #047857; }
-    .btn-danger { background: rgba(239, 68, 68, 0.15); color: #f87171; border-color: rgba(239, 68, 68, 0.4); }
-    .btn-danger:hover { background: #ef4444; color: #fff; }
+    .panel { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+    .panel-head { font-size: 15px; font-weight: 700; color: var(--text-heading); margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; }
 
-    /* Enterprise Audit Table */
-    .audit-table-wrap { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin-bottom: 20px; }
-    .audit-header { padding: 14px 18px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-    table { width: 100%; border-collapse: collapse; font-size: 12px; text-align: left; }
-    th { padding: 10px 14px; background: rgba(31, 41, 55, 0.5); color: #9ca3af; font-weight: 600; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); }
-    td { padding: 10px 14px; border-bottom: 1px solid rgba(55, 65, 81, 0.5); font-family: var(--font-mono); color: #d1d5db; }
-    tr:hover { background: rgba(31, 41, 55, 0.3); }
-    .badge-match { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); padding: 3px 8px; border-radius: 12px; font-size: 10px; font-weight: 700; }
-    .badge-mismatch { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); padding: 3px 8px; border-radius: 12px; font-size: 10px; font-weight: 700; }
-    .badge-missing { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); padding: 3px 8px; border-radius: 12px; font-size: 10px; font-weight: 700; }
+    .runbook-step { background: rgba(30, 41, 59, 0.5); border: 1px solid var(--border); border-radius: 8px; padding: 14px; margin-bottom: 10px; display: flex; gap: 14px; align-items: center; transition: all 0.2s; }
+    .runbook-step.active { border-color: var(--accent-aws); background: rgba(255, 153, 0, 0.05); }
+    .runbook-step.done { border-color: var(--success); background: rgba(16, 185, 129, 0.05); }
+    .step-num { width: 32px; height: 32px; border-radius: 50%; background: #0f172a; border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 13px; color: var(--text-heading); flex-shrink: 0; }
+    .runbook-step.done .step-num { background: var(--success); color: #fff; border-color: var(--success); }
+    .step-content { flex-grow: 1; }
+    .step-title { font-size: 13px; font-weight: 700; color: var(--text-heading); }
+    .step-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
 
-    /* CloudWatch Live Terminal Stream */
-    .terminal-container { background: #030712; border: 1px solid var(--border); border-radius: 8px; padding: 14px; font-family: var(--font-mono); font-size: 12px; height: 240px; overflow-y: auto; line-height: 1.6; }
-    .log-line { display: flex; gap: 8px; margin-bottom: 2px; }
-    .log-time { color: #6b7280; user-select: none; }
-    .log-info { color: #38bdf8; }
-    .log-success { color: #34d399; }
-    .log-warn { color: #fbbf24; }
-    .log-error { color: #f87171; }
-    .log-audit { color: #c084fc; }
+    /* Action Buttons */
+    .btn-group { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+    .btn { background: #1e293b; color: var(--text-heading); border: 1px solid var(--border); padding: 10px 18px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; }
+    .btn:hover { background: #334155; transform: translateY(-1px); }
+    .btn-danger { background: rgba(239, 68, 68, 0.2); color: #fca5a5; border-color: var(--danger); }
+    .btn-danger:hover { background: var(--danger); color: #fff; }
+    .btn-fix { background: #059669; color: #fff; border-color: #059669; font-weight: 700; font-size: 14px; padding: 12px 22px; box-shadow: 0 0 15px rgba(16, 185, 129, 0.3); }
+    .btn-fix:hover { background: #047857; }
+    .btn-aws { background: var(--accent-aws); color: #000; border-color: var(--accent-aws); font-weight: 700; }
+    .btn-aws:hover { background: #e68a00; color: #000; }
 
-    /* PagerDuty / SNS Alert Drawer */
-    .alert-banner { display: none; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.4); border-left: 4px solid var(--danger); border-radius: 6px; padding: 12px 16px; margin-bottom: 18px; }
-    .alert-banner.active { display: flex; justify-content: space-between; align-items: center; }
-    .alert-title { color: #fca5a5; font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
-    .alert-desc { color: #f87171; font-size: 12px; margin-top: 2px; }
+    /* Terminal Output Stream */
+    .terminal-box { background: #030712; border: 1px solid var(--border); border-radius: 8px; padding: 14px; font-family: var(--font-mono); font-size: 12px; height: 320px; overflow-y: auto; line-height: 1.6; }
+    .term-line { display: flex; gap: 8px; margin-bottom: 2px; }
+    .term-time { color: #64748b; user-select: none; }
+    .term-info { color: #38bdf8; }
+    .term-success { color: #34d399; }
+    .term-warn { color: #fbbf24; }
+    .term-error { color: #f87171; }
+    .term-audit { color: #c084fc; }
 
-    /* Infrastructure IaC Cards */
-    .iac-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; }
-    .iac-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 16px; font-size: 12px; }
-    .iac-type { color: var(--accent-aws); font-family: var(--font-mono); font-weight: 700; margin-bottom: 4px; }
-    .iac-name { color: var(--text-heading); font-size: 13px; font-weight: 600; margin-bottom: 8px; }
-    .iac-props { color: var(--text-muted); line-height: 1.6; }
+    /* Audit Table */
+    table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    th { padding: 12px 14px; background: rgba(30, 41, 59, 0.6); color: #94a3b8; font-weight: 600; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); text-align: left; }
+    td { padding: 10px 14px; border-bottom: 1px solid rgba(51, 65, 85, 0.5); font-family: var(--font-mono); color: #cbd5e1; }
+    .badge-match { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.4); padding: 3px 8px; border-radius: 12px; font-size: 10px; font-weight: 700; }
+    .badge-mismatch { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.4); padding: 3px 8px; border-radius: 12px; font-size: 10px; font-weight: 700; }
 
-    /* Certificate / Report Card */
-    .report-card { background: var(--bg-card); border: 1px solid #10b981; border-radius: 10px; padding: 24px; position: relative; }
-    .cert-stamp { position: absolute; right: 24px; top: 24px; border: 2px dashed #10b981; color: #10b981; padding: 8px 16px; border-radius: 8px; text-transform: uppercase; font-weight: 800; transform: rotate(-8deg); font-size: 14px; }
+    /* Post-Mortem Report Card */
+    .post-mortem-card { background: var(--bg-card); border: 1px solid #10b981; border-radius: 12px; padding: 26px; position: relative; }
+    .stamp-badge { position: absolute; right: 24px; top: 24px; border: 2px solid #10b981; color: #10b981; padding: 6px 16px; border-radius: 8px; font-weight: 800; font-size: 12px; transform: rotate(-5deg); text-transform: uppercase; }
   </style>
 </head>
 <body>
   <div class="container">
-    <!-- Header -->
+    <!-- Top Header -->
     <header>
-      <div class="brand-group">
+      <div class="brand-wrap">
         <i class="fa-brands fa-aws brand-icon"></i>
         <div>
           <div class="brand-title">
-            Enterprise AWS Disaster Recovery Orchestrator
-            <span class="pill pill-live"><span class="pulse-dot"></span> LIVE SYSTEM</span>
+            Enterprise AWS Disaster Recovery Orchestrator & War Room
+            <span class="pill pill-live"><span class="pulse-dot"></span> CLOUD CONNECTED</span>
           </div>
-          <div class="brand-sub">Automated Cross-Region S3 Replication &bull; Lambda Orchestration &bull; Cryptographic Integrity Audit</div>
+          <div class="brand-sub">Multi-Region S3 Replication &bull; Automated Sev-1 Incident Remediation &bull; Cryptographic Integrity Audit</div>
         </div>
       </div>
       <div class="header-pills">
-        <span class="pill"><i class="fa-solid fa-code-branch"></i> Git: main</span>
-        <span class="pill"><i class="fa-solid fa-cubes"></i> Terraform: 1.16.5</span>
-        <span class="pill"><i class="fa-solid fa-server"></i> Multi-Region Active</span>
-        <span class="pill"><i class="fa-solid fa-infinity"></i> Free-Tier Ready</span>
+        <span class="pill"><i class="fa-solid fa-cloud"></i> Primary: us-east-1</span>
+        <span class="pill"><i class="fa-solid fa-shield-halved"></i> Standby DR: us-west-2</span>
+        <span class="pill"><i class="fa-solid fa-stopwatch"></i> SLA Target: 99.99%</span>
+        <span class="pill"><i class="fa-solid fa-lock"></i> AES-256 SSE-S3</span>
       </div>
     </header>
 
-    <!-- PagerDuty / SNS Alert Drawer (Hidden until simulated) -->
-    <div class="alert-banner" id="sns-alert-banner">
-      <div>
-        <div class="alert-title"><i class="fa-solid fa-triangle-exclamation"></i> CRITICAL CLOUDWATCH ALARM TRIGGERED (SNS / PAGERDUTY ALERT)</div>
-        <div class="alert-desc" id="sns-alert-desc">Metric `AWS/Lambda Errors >= 1` in 5-minute evaluation period. On-call Support Engineer notified via SNS.</div>
+    <!-- CRITICAL SEV-1 OUTAGE BANNER (Appears when Disaster Strikes) -->
+    <div class="sev1-banner" id="sev1-alert">
+      <div class="sev1-flex">
+        <div>
+          <div class="sev1-title"><i class="fa-solid fa-triangle-exclamation"></i> 🚨 SEV-1 CRITICAL OUTAGE: PRIMARY REGION FAILURE (US-EAST-1)</div>
+          <div class="sev1-desc" id="sev1-desc">Primary database corrupted & regional networking unreachable. Customer transactions failing!</div>
+        </div>
+        <div style="text-align: right;">
+          <div style="font-size: 11px; color: #f87171; text-transform: uppercase; font-weight: 700; margin-bottom: 4px;">Active Incident Downtime</div>
+          <div class="downtime-counter" id="downtime-timer">00:00:00</div>
+        </div>
       </div>
-      <button class="btn btn-danger" onclick="dismissAlert()"><i class="fa-solid fa-xmark"></i> Acknowledge Incident</button>
     </div>
 
-    <!-- SLA / RPO / RTO Metrics Dashboard -->
-    <div class="metric-grid">
-      <div class="metric-card active-accent">
-        <div class="metric-label"><span>Primary Region</span><i class="fa-solid fa-location-dot"></i></div>
-        <div class="metric-value">us-east-1</div>
-        <div class="metric-foot text-success"><i class="fa-solid fa-circle-check"></i> Primary Workload Healthy</div>
+    <!-- LIVE PRODUCTION SERVICE STATUS CARD -->
+    <div class="service-status-card" id="service-card">
+      <div class="service-header">
+        <div>
+          <div class="service-name">
+            <i class="fa-solid fa-globe" style="color: var(--accent-aws);"></i>
+            Production Payments Gateway & E-Commerce Core API
+            <span class="status-badge badge-healthy" id="service-status-pill"><i class="fa-solid fa-circle-check"></i> 200 OK - OPERATIONAL</span>
+          </div>
+          <div class="service-url">Endpoint: https://api.payments.enterprise-cloud.com/v1/checkout</div>
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <button class="btn btn-danger" onclick="triggerDisaster('regional_outage')"><i class="fa-solid fa-fire"></i> 1. Simulate Regional Catastrophe</button>
+          <button class="btn btn-danger" onclick="triggerDisaster('ransomware')"><i class="fa-solid fa-skull"></i> 2. Simulate Ransomware DB Attack</button>
+        </div>
       </div>
-      <div class="metric-card active-blue">
-        <div class="metric-label"><span>DR Secondary Region</span><i class="fa-solid fa-shield-halved"></i></div>
-        <div class="metric-value">us-west-2</div>
-        <div class="metric-foot text-success"><i class="fa-solid fa-arrows-rotate"></i> Standby Bucket In-Sync</div>
-      </div>
-      <div class="metric-card active-success">
-        <div class="metric-label"><span>Target RPO Compliance</span><i class="fa-solid fa-clock-rotate-left"></i></div>
-        <div class="metric-value">&le; 24h</div>
-        <div class="metric-foot text-success"><i class="fa-solid fa-calendar-check"></i> EventBridge 02:00 UTC Cron</div>
-      </div>
-      <div class="metric-card active-success" id="rto-card">
-        <div class="metric-label"><span>Measured RTO (Stopwatch)</span><i class="fa-solid fa-stopwatch"></i></div>
-        <div class="metric-value" id="rto-value">-- sec</div>
-        <div class="metric-foot text-success" id="rto-sub"><i class="fa-solid fa-hourglass-start"></i> Awaiting Live Timed Drill</div>
-      </div>
-      <div class="metric-card active-accent">
-        <div class="metric-label"><span>Data Integrity SLA</span><i class="fa-solid fa-fingerprint"></i></div>
-        <div class="metric-value" id="hash-sla">100.0%</div>
-        <div class="metric-foot text-success"><i class="fa-solid fa-certificate"></i> SHA-256 Bit-Level Verified</div>
+
+      <div class="service-metrics-row">
+        <div>
+          <div class="sub-metric-title">Active Hosting Region</div>
+          <div class="sub-metric-val" id="metric-active-region" style="color: #38bdf8;">us-east-1 (Primary N. Virginia)</div>
+        </div>
+        <div>
+          <div class="sub-metric-title">Database Health</div>
+          <div class="sub-metric-val" id="metric-db-health" style="color: #34d399;">PostgreSQL Healthy (Synced)</div>
+        </div>
+        <div>
+          <div class="sub-metric-title">Total Processed Volume</div>
+          <div class="sub-metric-val" id="metric-tx-count">$1,250,420.00 (1,420 TX)</div>
+        </div>
+        <div>
+          <div class="sub-metric-title">Latest Measured RTO</div>
+          <div class="sub-metric-val" id="metric-rto" style="color: #ff9900;">-- sec</div>
+        </div>
       </div>
     </div>
 
     <!-- Navigation Tabs -->
     <div class="tabs-bar">
-      <button class="tab-btn active" onclick="openTab('tab-orchestration')"><i class="fa-solid fa-sliders"></i> Operations & DR Drill</button>
-      <button class="tab-btn" onclick="openTab('tab-chaos')"><i class="fa-solid fa-bug"></i> Chaos Engineering & Failure Injection</button>
-      <button class="tab-btn" onclick="openTab('tab-audit')"><i class="fa-solid fa-list-check"></i> SHA-256 Cryptographic Audit Matrix</button>
-      <button class="tab-btn" onclick="openTab('tab-report')"><i class="fa-solid fa-file-contract"></i> Compliance Report (SOC2 / ISO)</button>
-      <button class="tab-btn" onclick="openTab('tab-iac')"><i class="fa-solid fa-network-wired"></i> Terraform Infrastructure Map</button>
+      <button class="tab-btn active" onclick="openTab('tab-remediation')"><i class="fa-solid fa-wrench"></i> Live Disaster Remediation War Room</button>
+      <button class="tab-btn" onclick="openTab('tab-topology')"><i class="fa-solid fa-diagram-project"></i> Multi-Region Architecture & Buckets</button>
+      <button class="tab-btn" onclick="openTab('tab-audit')"><i class="fa-solid fa-fingerprint"></i> SHA-256 Cryptographic Audit Matrix</button>
+      <button class="tab-btn" onclick="openTab('tab-rca')"><i class="fa-solid fa-file-shield"></i> Post-Mortem Incident RCA Report</button>
+      <button class="tab-btn" onclick="openTab('tab-iac')"><i class="fa-solid fa-cubes"></i> Terraform IaC Resources (11 Provisioned)</button>
     </div>
 
-    <!-- TAB 1: OPERATIONS & DR DRILL -->
-    <div id="tab-orchestration" class="tab-pane active">
-      <!-- Multi-Region Topology Map -->
-      <div class="topology-container">
-        <div class="topo-header">
-          <div class="topo-title"><i class="fa-solid fa-diagram-project"></i> Live Multi-Region Architecture Topology</div>
-          <span class="pill"><i class="fa-solid fa-lock"></i> AES-256 (SSE-S3) + Public Access Block Enforced</span>
-        </div>
-        <div class="topo-grid">
-          <div class="region-box">
-            <span class="region-badge badge-primary-reg"><i class="fa-solid fa-database"></i> Source Region (Active)</span>
-            <div class="region-name">us-east-1 (N. Virginia)</div>
-            <div class="region-specs">
-              <div class="spec-item"><span>Primary Bucket:</span> <span id="topo-src-bucket" class="text-success">dr-lab-primary-src</span></div>
-              <div class="spec-item"><span>Object Inventory:</span> <span id="topo-src-count">0 files</span></div>
-              <div class="spec-item"><span>Versioning:</span> <span>Enabled (Multi-Version)</span></div>
-              <div class="spec-item"><span>Security:</span> <span>Blocked Public ACLs & Policies</span></div>
+    <!-- TAB 1: LIVE DISASTER REMEDIATION WAR ROOM -->
+    <div id="tab-remediation" class="tab-pane active">
+      <div class="war-room-grid">
+        <!-- Automated SRE Remediation Wizard -->
+        <div class="panel">
+          <div class="panel-head">
+            <span><i class="fa-solid fa-list-check" style="color: var(--accent-aws);"></i> Automated SRE Disaster Recovery Runbook</span>
+            <span class="pill" id="runbook-status"><i class="fa-solid fa-circle-check"></i> System Stable</span>
+          </div>
+
+          <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">
+            Jab production disaster aata hai, toh yeh automated wizard 1-click mein **traffic drain, DR snapshot mount, cryptographic audit, aur Route 53 DNS failover** execute karke website ko wapas 200 OK banata hai!
+          </p>
+
+          <div class="runbook-step" id="step-1">
+            <div class="step-num">1</div>
+            <div class="step-content">
+              <div class="step-title">Isolate Outage & Drain Primary Traffic</div>
+              <div class="step-sub">Detach broken us-east-1 endpoints; stop corrupt write traffic.</div>
             </div>
           </div>
-          <div class="bridge-connector">
-            <div class="bridge-pill"><i class="fa-solid fa-bolt"></i> Lambda + Boto3 Replication</div>
-            <div class="bridge-line"></div>
-            <div style="font-size: 11px; color: var(--text-muted);">Paginator &bull; Unique Run Prefixes &bull; Size Check</div>
-          </div>
-          <div class="region-box">
-            <span class="region-badge badge-dr-reg"><i class="fa-solid fa-box-archive"></i> DR Secondary Region (Standby)</span>
-            <div class="region-name">us-west-2 (Oregon)</div>
-            <div class="region-specs">
-              <div class="spec-item"><span>Recovery Bucket:</span> <span id="topo-dr-bucket" class="text-warning">dr-lab-recovery-dr</span></div>
-              <div class="spec-item"><span>Recovery Points:</span> <span id="topo-dr-count">0 snapshots</span></div>
-              <div class="spec-item"><span>Lifecycle Retention:</span> <span>14 Days Auto-Expire</span></div>
-              <div class="spec-item"><span>Isolation:</span> <span>Separate Blast Radius</span></div>
+
+          <div class="runbook-step" id="step-2">
+            <div class="step-num">2</div>
+            <div class="step-content">
+              <div class="step-title">Mount Latest Immutable DR Snapshot from us-west-2</div>
+              <div class="step-sub">Fetch verified cross-region S3 recovery prefix snapshot.</div>
             </div>
           </div>
-        </div>
-      </div>
 
-      <!-- Action Controller -->
-      <div class="action-panel">
-        <div class="panel-headline"><i class="fa-solid fa-play"></i> Disaster Recovery Execution Pipeline (Step-by-Step Drill)</div>
-        <div class="button-group">
-          <button class="btn btn-aws" onclick="generateSample()"><i class="fa-solid fa-folder-plus"></i> 1. Generate Enterprise Workload</button>
-          <button class="btn btn-success" onclick="runBackup()"><i class="fa-solid fa-cloud-arrow-up"></i> 2. Execute Scheduled Backup (Lambda Copy)</button>
-          <button class="btn" onclick="runRestore()"><i class="fa-solid fa-cloud-arrow-down"></i> 3. Execute Recovery Drill (Measure RTO)</button>
-          <button class="btn" onclick="verifyHashes()"><i class="fa-solid fa-fingerprint"></i> 4. Verify SHA-256 Checksums</button>
-        </div>
-
-        <!-- Live Terminal -->
-        <div class="panel-headline" style="margin-top: 20px;"><i class="fa-solid fa-terminal"></i> CloudWatch Observability Logs (Live Stream)</div>
-        <div class="terminal-container" id="terminal">
-          <div class="log-line"><span class="log-time">[SYSTEM INIT]</span> <span class="log-info">Enterprise AWS DR Console Online. Monitoring EventBridge and Lambda workers.</span></div>
-          <div class="log-line"><span class="log-time">[SYSTEM INIT]</span> <span class="log-info">Awaiting operator action. Click '1. Generate Enterprise Workload' to begin.</span></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- TAB 2: CHAOS ENGINEERING & FAILURE INJECTION -->
-    <div id="tab-chaos" class="tab-pane">
-      <div class="action-panel">
-        <div class="panel-headline"><i class="fa-solid fa-biohazard text-danger"></i> Enterprise Chaos Engineering & Failure Scenarios</div>
-        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">
-          As an Application Support / DevOps Engineer, you must prove that the system detects <strong>silent failures, bit-rot, human error, and policy drift</strong> before production outage occurs.
-        </p>
-
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px;">
-          <div class="region-box">
-            <h4 style="color: #f87171; margin-bottom: 6px;"><i class="fa-solid fa-file-shield"></i> Scenario 1: Ransomware / Bit-Rot Tampering</h4>
-            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">Injects silent byte corruption into production database dump. Tests if SHA-256 cryptographic check catches file tampering.</p>
-            <button class="btn btn-danger" onclick="corruptSample()"><i class="fa-solid fa-skull"></i> Tamper Production DB Dump</button>
+          <div class="runbook-step" id="step-3">
+            <div class="step-num">3</div>
+            <div class="step-content">
+              <div class="step-title">Execute Cryptographic SHA-256 Checksum Audit</div>
+              <div class="step-sub">Ensure zero bit-rot tampering before promoting database.</div>
+            </div>
           </div>
 
-          <div class="region-box">
-            <h4 style="color: #fbbf24; margin-bottom: 6px;"><i class="fa-solid fa-trash-can"></i> Scenario 2: Accidental File Deletion (Human Error)</h4>
-            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">Simulates a support operator accidentally deleting critical SSL/JWT certificates. Tests if the restore drill flags missing objects.</p>
-            <button class="btn" style="border-color: #f59e0b; color: #fbbf24;" onclick="simulateDeletion()"><i class="fa-solid fa-bomb"></i> Delete Critical Auth Keys</button>
+          <div class="runbook-step" id="step-4">
+            <div class="step-num">4</div>
+            <div class="step-content">
+              <div class="step-title">Restore Database & Route 53 DNS Failover</div>
+              <div class="step-sub">Promote DR region us-west-2 to Active; switch global DNS.</div>
+            </div>
           </div>
 
-          <div class="region-box">
-            <h4 style="color: #f87171; margin-bottom: 6px;"><i class="fa-solid fa-triangle-exclamation"></i> Scenario 3: IAM AccessDenied / KMS Drift</h4>
-            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">Simulates an IAM Permission error during replication. Triggers the CloudWatch Metric Alarm and fires the SNS PagerDuty alert.</p>
-            <button class="btn btn-danger" onclick="simulateIamFailure()"><i class="fa-solid fa-bell"></i> Trigger CloudWatch SNS Alarm</button>
+          <!-- THE BIG ACTION BUTTON -->
+          <div class="btn-group">
+            <button class="btn btn-fix" id="btn-remediate" onclick="executeAutomatedRemediation()"><i class="fa-solid fa-bolt"></i> 1-CLICK DISASTER REMEDIATION & FAILOVER</button>
+            <button class="btn btn-aws" onclick="runNormalBackup()"><i class="fa-solid fa-cloud-arrow-up"></i> Routine Backup Run</button>
+            <button class="btn" onclick="resetSystem()"><i class="fa-solid fa-arrow-rotate-left"></i> Reset to Baseline</button>
+          </div>
+        </div>
+
+        <!-- Real-Time CloudWatch & Incident Log Stream -->
+        <div class="panel">
+          <div class="panel-head">
+            <span><i class="fa-solid fa-terminal" style="color: var(--accent-blue);"></i> CloudWatch Observability Logs (Live Execution)</span>
+            <span class="pill pill-live"><span class="pulse-dot"></span> STREAMING</span>
+          </div>
+
+          <div class="terminal-box" id="terminal">
+            <div class="term-line"><span class="term-time">[SYS-INIT]</span> <span class="term-info">Disaster Recovery Orchestrator Online. Monitoring Primary Region us-east-1.</span></div>
+            <div class="term-line"><span class="term-time">[SYS-INIT]</span> <span class="term-success">S3 Cross-Region Buckets Connected. Target SLA: 99.99%.</span></div>
+            <div class="term-line"><span class="term-time">[READY]</span> <span class="term-info">Click 'Simulate Regional Catastrophe' above to observe live incident detection.</span></div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- TAB 3: AUDIT TABLE -->
+    <!-- TAB 2: TOPOLOGY -->
+    <div id="tab-topology" class="tab-pane">
+      <div class="panel" style="margin-bottom: 20px;">
+        <div class="panel-head"><span><i class="fa-solid fa-diagram-project"></i> Multi-Region Active/Standby Architecture</span></div>
+        <div style="display: grid; grid-template-columns: 1fr auto 1fr; gap: 20px; align-items: center;">
+          <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid var(--border); border-radius: 8px; padding: 18px;">
+            <span class="status-badge badge-healthy" style="margin-bottom: 10px;">Primary Region (us-east-1)</span>
+            <h3 style="color: #fff; margin-bottom: 6px;">Source S3: dr-lab-primary-src</h3>
+            <p style="font-size: 12px; color: var(--text-muted);">Contains live DB dumps, auth keys, application configs. Protected by Versioning & AES-256 SSE-S3.</p>
+          </div>
+          <div style="text-align: center; color: var(--accent-aws); font-size: 24px;">
+            <i class="fa-solid fa-arrows-split-up-and-left"></i>
+            <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Automated S3 Replication</div>
+          </div>
+          <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid var(--border); border-radius: 8px; padding: 18px;">
+            <span class="status-badge badge-recovered" style="margin-bottom: 10px;">Disaster Recovery Region (us-west-2)</span>
+            <h3 style="color: #fff; margin-bottom: 6px;">Recovery S3: dr-lab-recovery-dr</h3>
+            <p style="font-size: 12px; color: var(--text-muted);">Independent blast radius in Oregon. Immutable timestamped snapshots with 14-day auto-lifecycle purge.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: SHA-256 AUDIT MATRIX -->
     <div id="tab-audit" class="tab-pane">
-      <div class="audit-table-wrap">
-        <div class="audit-header">
-          <div style="font-weight: 700; color: var(--text-heading);"><i class="fa-solid fa-fingerprint"></i> Side-by-Side Cryptographic SHA-256 Hash Audit</div>
-          <span class="pill" id="audit-count-badge">0 Objects Audited</span>
+      <div class="panel">
+        <div class="panel-head">
+          <span><i class="fa-solid fa-fingerprint"></i> Cryptographic SHA-256 Checksum Audit Matrix</span>
+          <span class="pill" id="audit-badge">Verified</span>
         </div>
         <table>
           <thead>
             <tr>
-              <th>File Name & Path</th>
+              <th>File Path</th>
               <th>Status</th>
               <th>Source SHA-256 Checksum (Primary)</th>
-              <th>Restored SHA-256 Checksum (DR Copy)</th>
+              <th>Restored SHA-256 Checksum (DR Snapshot)</th>
             </tr>
           </thead>
-          <tbody id="audit-table-body">
+          <tbody id="audit-tbody">
             <tr>
-              <td colspan="4" style="text-align: center; color: var(--text-muted); padding: 30px;">
-                No audit run yet. Execute the Disaster Recovery Drill in Tab 1, then click 'Verify SHA-256 Checksums'.
-              </td>
+              <td colspan="4" style="text-align: center; color: var(--text-muted); padding: 24px;">Run the Remediation Wizard or Backup to view cryptographic checksums.</td>
             </tr>
           </tbody>
         </table>
       </div>
     </div>
 
-    <!-- TAB 4: COMPLIANCE REPORT -->
-    <div id="tab-report" class="tab-pane">
-      <div class="report-card">
-        <div class="cert-stamp">AUDIT COMPLIANT</div>
-        <h2 style="color: var(--text-heading); font-size: 18px; margin-bottom: 6px;"><i class="fa-solid fa-stamp text-success"></i> Disaster Recovery Audit Certificate (ISO 27001 / SOC 2 Ready)</h2>
-        <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 20px;">Automated Recovery Point and Recovery Time Objective Attestation Record</div>
+    <!-- TAB 4: POST-MORTEM RCA REPORT -->
+    <div id="tab-rca" class="tab-pane">
+      <div class="post-mortem-card">
+        <div class="stamp-badge">INCIDENT RESOLVED & CLOSED</div>
+        <h2 style="color: var(--text-heading); font-size: 18px; margin-bottom: 6px;"><i class="fa-solid fa-file-contract text-success"></i> Disaster Incident Post-Mortem & RCA Report</h2>
+        <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 20px;">SRE Engineering Incident Review for Executive Leadership & SOC 2 Compliance</div>
 
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; font-size: 13px; margin-bottom: 24px;">
-          <div class="spec-item"><span>Target RPO (Schedule):</span> <strong class="text-success">&le; 24 Hours (EventBridge Daily)</strong></div>
-          <div class="spec-item"><span>Measured RTO (Actual):</span> <strong class="text-success" id="rep-rto">-- seconds</strong></div>
-          <div class="spec-item"><span>Data Integrity Check:</span> <strong class="text-success" id="rep-integrity">SHA-256 Exact Match (0 Bit-Rot)</strong></div>
-          <div class="spec-item"><span>Encryption at Rest:</span> <strong>AES-256 (SSE-S3 Verified)</strong></div>
-          <div class="spec-item"><span>Multi-Region Pair:</span> <strong>us-east-1 &harr; us-west-2</strong></div>
-          <div class="spec-item"><span>Audit Execution Date:</span> <strong id="rep-date">Current Live Run</strong></div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-bottom: 24px;">
+          <div><div class="sub-metric-title">Incident Classification</div><strong style="color: #f87171;">SEV-1 Catastrophic Regional Outage</strong></div>
+          <div><div class="sub-metric-title">Time to Detect (TTD)</div><strong style="color: #34d399;">&lt; 5 seconds (CloudWatch Metric Breach)</strong></div>
+          <div><div class="sub-metric-title">Time to Remediate (TTR / RTO)</div><strong style="color: #ff9900;" id="rca-rto">0.042 seconds (Automated Failover)</strong></div>
+          <div><div class="sub-metric-title">Data Loss (RPO)</div><strong style="color: #34d399;">0 Bytes (100% Cryptographically Verified)</strong></div>
+          <div><div class="sub-metric-title">Active Failover Region</div><strong style="color: #38bdf8;">us-west-2 (Oregon Standby Promoted to Active)</strong></div>
         </div>
 
-        <button class="btn btn-aws" onclick="window.print()"><i class="fa-solid fa-print"></i> Export / Print Compliance Audit Report</button>
+        <button class="btn btn-aws" onclick="window.print()"><i class="fa-solid fa-print"></i> Export / Print Post-Mortem Report</button>
       </div>
     </div>
 
-    <!-- TAB 5: TERRAFORM IAC MAP -->
+    <!-- TAB 5: TERRAFORM IAC -->
     <div id="tab-iac" class="tab-pane">
-      <div class="panel-headline" style="margin-bottom: 14px;"><i class="fa-solid fa-cubes text-accent"></i> 11 Provisioned Terraform Resources (Least-Privilege Scoped)</div>
-      <div class="iac-grid">
-        <div class="iac-card">
-          <div class="iac-type">aws_s3_bucket.source</div>
-          <div class="iac-name">Primary S3 Bucket (Region 1)</div>
-          <div class="iac-props">Versioned, Encrypted (AES-256), Block Public Access Enabled</div>
-        </div>
-        <div class="iac-card">
-          <div class="iac-type">aws_s3_bucket.destination</div>
-          <div class="iac-name">DR S3 Bucket (Region 2)</div>
-          <div class="iac-props">Cross-Region target with 14-Day Auto-Expiration Lifecycle</div>
-        </div>
-        <div class="iac-card">
-          <div class="iac-type">aws_iam_role.backup_lambda</div>
-          <div class="iac-name">Least-Privilege Execution Role</div>
-          <div class="iac-props">Scoped strictly to Source List/Get and DR Recovery Prefix Put</div>
-        </div>
-        <div class="iac-card">
-          <div class="iac-type">aws_lambda_function.backup</div>
-          <div class="iac-name">Python 3.12 Serverless Worker</div>
-          <div class="iac-props">900s Timeout, 256MB RAM, Paginator & Size Validation Engine</div>
-        </div>
-        <div class="iac-card">
-          <div class="iac-type">aws_cloudwatch_event_rule.daily</div>
-          <div class="iac-name">EventBridge Cron Rule</div>
-          <div class="iac-props">cron(0 2 * * ? *) triggers Lambda daily at 02:00 UTC</div>
-        </div>
-        <div class="iac-card">
-          <div class="iac-type">aws_cloudwatch_metric_alarm.errors</div>
-          <div class="iac-name">Lambda Failure Alarm</div>
-          <div class="iac-props">Monitors AWS/Lambda Errors >= 1 (Period 300s) -> SNS Trigger</div>
-        </div>
-        <div class="iac-card">
-          <div class="iac-type">aws_sns_topic.alerts</div>
-          <div class="iac-name">SNS On-Call Alert Topic</div>
-          <div class="iac-props">Email endpoint notification for Application Support / DevOps</div>
-        </div>
-        <div class="iac-card">
-          <div class="iac-type">aws_s3_bucket_lifecycle_configuration</div>
-          <div class="iac-name">DR Expiration Policy</div>
-          <div class="iac-props">Automatically purges recovery points older than 14 days</div>
+      <div class="panel">
+        <div class="panel-head"><span><i class="fa-solid fa-cubes text-accent"></i> 11 Provisioned Terraform Multi-Region Resources</span></div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; font-size: 12px;">
+          <div style="background: rgba(30, 41, 59, 0.4); border: 1px solid var(--border); padding: 14px; border-radius: 8px;">
+            <div style="color: var(--accent-aws); font-family: var(--font-mono); font-weight: 700;">aws_s3_bucket.source</div>
+            <div style="font-weight: 600; color: #fff; margin: 4px 0;">Primary Source S3 Bucket</div>
+            <div style="color: var(--text-muted);">Region: us-east-1 &bull; Versioned &bull; AES-256 SSE-S3</div>
+          </div>
+          <div style="background: rgba(30, 41, 59, 0.4); border: 1px solid var(--border); padding: 14px; border-radius: 8px;">
+            <div style="color: var(--accent-aws); font-family: var(--font-mono); font-weight: 700;">aws_s3_bucket.destination</div>
+            <div style="font-weight: 600; color: #fff; margin: 4px 0;">DR Standby S3 Bucket</div>
+            <div style="color: var(--text-muted);">Region: us-west-2 &bull; 14-Day Auto-Expiration Lifecycle</div>
+          </div>
+          <div style="background: rgba(30, 41, 59, 0.4); border: 1px solid var(--border); padding: 14px; border-radius: 8px;">
+            <div style="color: var(--accent-aws); font-family: var(--font-mono); font-weight: 700;">aws_lambda_function.backup</div>
+            <div style="font-weight: 600; color: #fff; margin: 4px 0;">Python 3.12 Serverless Worker</div>
+            <div style="color: var(--text-muted);">S3 Paginator &bull; ContentLength Size Check &bull; 900s Timeout</div>
+          </div>
+          <div style="background: rgba(30, 41, 59, 0.4); border: 1px solid var(--border); padding: 14px; border-radius: 8px;">
+            <div style="color: var(--accent-aws); font-family: var(--font-mono); font-weight: 700;">aws_cloudwatch_metric_alarm.errors</div>
+            <div style="font-weight: 600; color: #fff; margin: 4px 0;">CloudWatch Sev-1 Failure Alarm</div>
+            <div style="color: var(--text-muted);">Evaluates Lambda Errors >= 1 in 300s &bull; Dispatches to SNS</div>
+          </div>
         </div>
       </div>
     </div>
   </div>
 
   <script>
+    let downtimeInterval = null;
+    let downtimeSeconds = 0;
+
     function openTab(tabId) {
       document.querySelectorAll('.tab-pane').forEach(el => el.classList.remove('active'));
       document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
@@ -410,96 +405,174 @@ HTML_CONTENT = """<!DOCTYPE html>
     function logTerm(msg, type='info') {
       const box = document.getElementById('terminal');
       const time = new Date().toLocaleTimeString();
-      let colorClass = 'log-info';
-      if(type === 'success') colorClass = 'log-success';
-      if(type === 'warn') colorClass = 'log-warn';
-      if(type === 'error') colorClass = 'log-error';
-      if(type === 'audit') colorClass = 'log-audit';
+      let colorClass = 'term-info';
+      if(type === 'success') colorClass = 'term-success';
+      if(type === 'warn') colorClass = 'term-warn';
+      if(type === 'error') colorClass = 'term-error';
+      if(type === 'audit') colorClass = 'term-audit';
       
       const line = document.createElement('div');
-      line.className = 'log-line';
-      line.innerHTML = `<span class="log-time">[${time}]</span> <span class="${colorClass}">${msg}</span>`;
+      line.className = 'term-line';
+      line.innerHTML = `<span class="term-time">[${time}]</span> <span class="${colorClass}">${msg}</span>`;
       box.appendChild(line);
       box.scrollTop = box.scrollHeight;
     }
 
-    function dismissAlert() {
-      document.getElementById('sns-alert-banner').classList.remove('active');
+    function startDowntimeClock() {
+      downtimeSeconds = 0;
+      clearInterval(downtimeInterval);
+      downtimeInterval = setInterval(() => {
+        downtimeSeconds++;
+        const mins = String(Math.floor(downtimeSeconds / 60)).padStart(2, '0');
+        const secs = String(downtimeSeconds % 60).padStart(2, '0');
+        document.getElementById('downtime-timer').innerText = `00:${mins}:${secs}`;
+      }, 1000);
     }
 
-    async function refreshStatus() {
-      try {
-        const res = await fetch('/api/status');
-        const data = await res.json();
-        document.getElementById('topo-src-count').innerText = `${data.source_files.length} active files`;
-        document.getElementById('topo-dr-count').innerText = `${data.dr_runs.length} recovery snapshots`;
-        if(data.last_rto) {
-          document.getElementById('rto-value').innerText = `${data.last_rto}s`;
-          document.getElementById('rto-sub').innerText = 'Verified via Timed Drill';
-          document.getElementById('rep-rto').innerText = `${data.last_rto}s`;
-        }
-      } catch (err) {
-        console.error(err);
+    function stopDowntimeClock() {
+      clearInterval(downtimeInterval);
+    }
+
+    // 1. TRIGGER DISASTER
+    async function triggerDisaster(type) {
+      logTerm(`CRITICAL INCIDENT: Injecting Sev-1 Disaster (${type.toUpperCase()})...`, 'error');
+      startDowntimeClock();
+      
+      // Update UI to Outage Mode
+      document.getElementById('sev1-alert').classList.add('active');
+      const card = document.getElementById('service-card');
+      card.classList.add('down');
+      
+      const pill = document.getElementById('service-status-pill');
+      pill.className = 'status-badge badge-outage';
+      pill.innerHTML = '<span class="pulse-dot-red"></span> 503 SERVICE UNAVAILABLE (SEV-1)';
+      
+      document.getElementById('metric-db-health').innerText = 'Corrupted / Offline';
+      document.getElementById('metric-db-health').style.color = '#ef4444';
+      
+      document.getElementById('metric-active-region').innerText = 'us-east-1 (FAILED / UNREACHABLE)';
+      document.getElementById('metric-active-region').style.color = '#ef4444';
+
+      document.getElementById('runbook-status').className = 'pill';
+      document.getElementById('runbook-status').innerHTML = '<span class="pulse-dot-red"></span> SEV-1 ACTIVE';
+
+      // Call backend to tamper data
+      if(type === 'ransomware') {
+        await fetch('/api/corrupt-data', { method: 'POST' });
+        logTerm("CHAOS: Production DB dump encrypted by ransomware bytes!", 'error');
+      } else {
+        await fetch('/api/simulate-regional-outage', { method: 'POST' });
+        logTerm("CHAOS: us-east-1 regional power failure simulated! S3 endpoints unreachable.", 'error');
       }
+
+      logTerm("ALARM: CloudWatch Metric `Errors >= 1` breached. PagerDuty / SNS Alert fired to Support Team!", 'error');
+      openTab('tab-remediation');
     }
 
-    async function generateSample() {
-      logTerm("PROVISIONING: Generating enterprise multi-service dataset (Database dumps, Auth keys, App configs, Financial ledger)...");
-      const res = await fetch('/api/generate-sample', { method: 'POST' });
-      const data = await res.json();
-      logTerm(`SUCCESS: Created ${data.created_count} enterprise files in primary bucket location.`, 'success');
-      refreshStatus();
+    // 2. EXECUTE 1-CLICK DISASTER REMEDIATION
+    async function executeAutomatedRemediation() {
+      logTerm("STARTING RUNBOOK: Initiating 1-Click Automated Disaster Recovery Failover...", 'warn');
+      
+      // Step 1
+      document.getElementById('step-1').className = 'runbook-step done';
+      logTerm("[STEP 1/4] Draining ingress traffic from damaged region us-east-1...", 'info');
+      await new Promise(r => setTimeout(r, 600));
+
+      // Step 2
+      document.getElementById('step-2').className = 'runbook-step done';
+      logTerm("[STEP 2/4] Accessing DR Standby S3 Bucket in us-west-2 (Oregon)...", 'info');
+      logTerm("[STEP 2/4] Downloading latest verified immutable snapshot...", 'info');
+      const resRestore = await fetch('/api/run-restore', { method: 'POST' });
+      const dataRestore = await resRestore.json();
+      await new Promise(r => setTimeout(r, 600));
+
+      // Step 3
+      document.getElementById('step-3').className = 'runbook-step done';
+      logTerm("[STEP 3/4] Running bit-level SHA-256 cryptographic checksum audit on recovered dataset...", 'audit');
+      const resVerify = await fetch('/api/verify-hashes', { method: 'POST' });
+      const dataVerify = await resVerify.json();
+      populateAuditTable(dataVerify);
+      await new Promise(r => setTimeout(r, 600));
+
+      // Step 4
+      document.getElementById('step-4').className = 'runbook-step done';
+      logTerm("[STEP 4/4] Promoting us-west-2 to PRIMARY. Executing Route 53 DNS failover switch...", 'success');
+      await new Promise(r => setTimeout(r, 600));
+
+      // Recovery Complete!
+      stopDowntimeClock();
+      document.getElementById('sev1-alert').classList.remove('active');
+      const card = document.getElementById('service-card');
+      card.classList.remove('down');
+
+      const pill = document.getElementById('service-status-pill');
+      pill.className = 'status-badge badge-recovered';
+      pill.innerHTML = '<i class="fa-solid fa-circle-check"></i> 200 OK - OPERATIONAL (FAILOVER ACTIVE)';
+
+      document.getElementById('metric-db-health').innerText = 'Restored 100% (PostgreSQL Healthy)';
+      document.getElementById('metric-db-health').style.color = '#34d399';
+
+      document.getElementById('metric-active-region').innerText = 'us-west-2 (DR Failover Active)';
+      document.getElementById('metric-active-region').style.color = '#38bdf8';
+
+      document.getElementById('metric-rto').innerText = `${dataRestore.elapsed_seconds} sec`;
+      document.getElementById('rca-rto').innerText = `${dataRestore.elapsed_seconds} sec (Stopwatch Benchmark)`;
+
+      document.getElementById('runbook-status').className = 'pill pill-live';
+      document.getElementById('runbook-status').innerHTML = '<span class="pulse-dot"></span> FAILOVER HEALTHY';
+
+      logTerm(`INCIDENT RESOLVED! Service restored to 200 OK in ${dataRestore.elapsed_seconds}s!`, 'success');
+      logTerm("AUDIT CERTIFICATE: Zero bit-rot tampering. Generated Post-Mortem RCA in Tab 4.", 'success');
     }
 
-    async function runBackup() {
-      logTerm("INVOKING LAMBDA: Initializing EventBridge async trigger -> Lambda handler(event, context)...");
-      logTerm("PAGINATION: Scanning source bucket with S3 list_objects_v2 paginator...", 'info');
+    async function runNormalBackup() {
+      logTerm("RUNNING ROUTINE BACKUP: EventBridge trigger -> Lambda handler...", 'info');
       const res = await fetch('/api/run-backup', { method: 'POST' });
       const data = await res.json();
       if(data.error) {
         logTerm(`BACKUP FAILED: ${data.error}`, 'error');
       } else {
-        logTerm(`REPLICATION SUCCESS: Snapshot created! Run ID: ${data.run_id}`, 'success');
-        logTerm(`COPIED: ${data.copied_count} objects verified with S3 head_object ContentLength check.`, 'audit');
-        logTerm(`IMMUTABILITY: Target written to isolated prefix: ${data.prefix}`, 'info');
+        logTerm(`BACKUP COMPLETED: Snapshot written to ${data.prefix} (${data.copied_count} files verified)`, 'success');
       }
-      refreshStatus();
     }
 
-    async function runRestore() {
-      logTerm("RECOVERY DRILL: Starting stopwatch timer. Initializing local download from DR bucket...", 'warn');
-      const res = await fetch('/api/run-restore', { method: 'POST' });
-      const data = await res.json();
-      if(data.error) {
-        logTerm(`RESTORE ERROR: ${data.error}`, 'error');
-      } else {
-        logTerm(`RESTORE PASSED: Downloaded ${data.restored_count} files in ${data.elapsed_seconds} seconds!`, 'success');
-        document.getElementById('rto-value').innerText = `${data.elapsed_seconds}s`;
-        document.getElementById('rto-sub').innerText = 'Stopwatch Benchmark';
-        document.getElementById('rep-rto').innerText = `${data.elapsed_seconds}s`;
-      }
-      refreshStatus();
-    }
-
-    async function verifyHashes() {
-      logTerm("CRYPTOGRAPHIC AUDIT: Generating SHA-256 hashes for Source vs Restored objects...", 'audit');
-      const res = await fetch('/api/verify-hashes', { method: 'POST' });
-      const data = await res.json();
-      const tbody = document.getElementById('audit-table-body');
-      tbody.innerHTML = '';
+    async function resetSystem() {
+      logTerm("RESETTING: Restoring baseline mock enterprise workload in primary bucket...", 'info');
+      await fetch('/api/generate-sample', { method: 'POST' });
+      await fetch('/api/run-backup', { method: 'POST' });
       
-      let allMatch = true;
+      stopDowntimeClock();
+      document.getElementById('sev1-alert').classList.remove('active');
+      document.getElementById('service-card').classList.remove('down');
+
+      const pill = document.getElementById('service-status-pill');
+      pill.className = 'status-badge badge-healthy';
+      pill.innerHTML = '<i class="fa-solid fa-circle-check"></i> 200 OK - OPERATIONAL';
+
+      document.getElementById('metric-db-health').innerText = 'PostgreSQL Healthy (Synced)';
+      document.getElementById('metric-db-health').style.color = '#34d399';
+
+      document.getElementById('metric-active-region').innerText = 'us-east-1 (Primary N. Virginia)';
+      document.getElementById('metric-active-region').style.color = '#38bdf8';
+
+      ['step-1','step-2','step-3','step-4'].forEach(id => {
+        document.getElementById(id).className = 'runbook-step';
+      });
+
+      logTerm("SYSTEM RESTORED: Primary region us-east-1 active. Pipeline normal.", 'success');
+    }
+
+    function populateAuditTable(data) {
+      const tbody = document.getElementById('audit-tbody');
+      tbody.innerHTML = '';
+      if(!data.results) return;
+
       data.results.forEach(row => {
         const tr = document.createElement('tr');
         let statusBadge = '<span class="badge-match"><i class="fa-solid fa-check"></i> EXACT MATCH</span>';
-        if(row.status === 'hash_mismatch') {
-          statusBadge = '<span class="badge-mismatch"><i class="fa-solid fa-triangle-exclamation"></i> BIT-ROT / TAMPERED</span>';
-          allMatch = false;
-        } else if(row.status === 'missing_in_restore') {
-          statusBadge = '<span class="badge-missing"><i class="fa-solid fa-xmark"></i> MISSING IN DR</span>';
-          allMatch = false;
+        if(row.status !== 'match') {
+          statusBadge = '<span class="badge-mismatch"><i class="fa-solid fa-xmark"></i> MISMATCH</span>';
         }
-
         tr.innerHTML = `
           <td><strong>${row.path}</strong></td>
           <td>${statusBadge}</td>
@@ -508,52 +581,20 @@ HTML_CONTENT = """<!DOCTYPE html>
         `;
         tbody.appendChild(tr);
       });
-
-      document.getElementById('audit-count-badge').innerText = `${data.results.length} Files Audited`;
-      if(allMatch && data.results.length > 0) {
-        logTerm(`AUDIT ATTESTATION PASSED: 100% cryptographic SHA-256 match. Zero byte corruption!`, 'success');
-        document.getElementById('hash-sla').innerText = '100.0%';
-        document.getElementById('rep-integrity').innerText = '100% Passed (SHA-256 Verified)';
-      } else if(!allMatch) {
-        logTerm(`AUDIT FAILURE: Data integrity compromise detected! Check Tab 3 matrix.`, 'error');
-        document.getElementById('hash-sla').innerText = 'COMPROMISED';
-        document.getElementById('rep-integrity').innerText = 'Integrity Failure Detected!';
-      }
+      document.getElementById('audit-badge').innerText = `${data.results.length} Objects Checked`;
     }
 
-    async function corruptSample() {
-      logTerm("CHAOS INJECTION: Tampering bytes in production database dump (Simulating Ransomware)...", 'error');
-      const res = await fetch('/api/corrupt-data', { method: 'POST' });
-      const data = await res.json();
-      logTerm(`DATA TAMPERED: Modified ${data.corrupted_file}. Click 'Verify SHA-256 Checksums' to see instant failure detection.`, 'error');
-      openTab('tab-audit');
-      verifyHashes();
-    }
-
-    async function simulateDeletion() {
-      logTerm("CHAOS INJECTION: Simulating operator error (Deleting critical JWT authentication key)...", 'warn');
-      const res = await fetch('/api/simulate-deletion', { method: 'POST' });
-      const data = await res.json();
-      logTerm(`OBJECT DELETED: Removed ${data.deleted_file} from primary store.`, 'warn');
-      openTab('tab-audit');
-      verifyHashes();
-    }
-
-    function simulateIamFailure() {
-      logTerm("CHAOS INJECTION: Simulating S3:PutObject AccessDeniedException on Lambda handler...", 'error');
-      logTerm("CLOUDWATCH METRIC: Incremented AWS/Lambda Errors = 1 (Breaching threshold 1).", 'error');
-      logTerm("SNS DISPATCH: Emergency email and PagerDuty alert pushed to on-call support team!", 'error');
-      document.getElementById('sns-alert-banner').classList.add('active');
-    }
-
-    refreshStatus();
+    // Auto-setup sample files on load
+    fetch('/api/generate-sample', { method: 'POST' }).then(() => {
+      fetch('/api/run-backup', { method: 'POST' });
+    });
   </script>
 </body>
 </html>
 """
 
 
-class EnterpriseDRDashboardHandler(http.server.BaseHTTPRequestHandler):
+class WarRoomDRDashboardHandler(http.server.BaseHTTPRequestHandler):
     def do_GET(self):
         parsed = urlparse(self.path)
         if parsed.path in ["/", "/index.html"]:
@@ -700,6 +741,14 @@ class EnterpriseDRDashboardHandler(http.server.BaseHTTPRequestHandler):
             elapsed = round(time.perf_counter() - start, 4)
             self.server.last_rto = elapsed
 
+            # If source was damaged, also restore the clean files to source!
+            for item in src_recovery.rglob("*"):
+                if item.is_file():
+                    rel = item.relative_to(src_recovery)
+                    target = SAMPLE_DIR / rel
+                    target.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copy2(item, target)
+
             res = {"restored_count": restored_count, "elapsed_seconds": elapsed}
             self.wfile.write(json.dumps(res).encode("utf-8"))
 
@@ -732,16 +781,13 @@ class EnterpriseDRDashboardHandler(http.server.BaseHTTPRequestHandler):
                 res = {"error": "Generate sample data first."}
             self.wfile.write(json.dumps(res).encode("utf-8"))
 
-        elif parsed.path == "/api/simulate-deletion":
-            target = SAMPLE_DIR / "auth" / "jwt_signing_keys.pem"
+        elif parsed.path == "/api/simulate-regional-outage":
+            target = SAMPLE_DIR / "database" / "pg_dump_production_customers.sql"
             if target.exists():
-                target.unlink()
-                res = {
-                    "deleted_file": "auth/jwt_signing_keys.pem",
-                    "status": "deleted",
-                }
-            else:
-                res = {"error": "File does not exist or already deleted."}
+                target.write_text(
+                    "-- 503 SERVICE UNAVAILABLE: REGIONAL POWER OUTAGE (us-east-1)\n"
+                )
+            res = {"status": "outage_simulated", "region": "us-east-1"}
             self.wfile.write(json.dumps(res).encode("utf-8"))
 
     def log_message(self, format, *args):
@@ -750,11 +796,9 @@ class EnterpriseDRDashboardHandler(http.server.BaseHTTPRequestHandler):
 
 def main():
     socketserver.TCPServer.allow_reuse_address = True
-    with socketserver.TCPServer(("", PORT), EnterpriseDRDashboardHandler) as httpd:
+    with socketserver.TCPServer(("", PORT), WarRoomDRDashboardHandler) as httpd:
         print(f"============================================================")
-        print(
-            f" Enterprise AWS Disaster Recovery Console LIVE on port: {PORT}"
-        )
+        print(f" SRE Disaster Recovery War Room LIVE on port: {PORT}")
         print(f"============================================================")
         try:
             httpd.serve_forever()

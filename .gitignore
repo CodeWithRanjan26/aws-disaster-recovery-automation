@@ -1,0 +1,23 @@
+# Terraform state and local plans
+*.tfstate
+*.tfstate.*
+*.tfplan
+.terraform/
+terraform/terraform.tfvars
+terraform/backup-lambda.zip
+crash.log
+crash.*.log
+
+# Python and local environment
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Local credentials and generated test data
+.env
+.env.*
+!.env.example
+.aws/
+restore-output/
+sample-data/

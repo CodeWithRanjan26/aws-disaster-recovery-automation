@@ -1,0 +1,5 @@
+aws_profile        = "dr-lab"
+source_region      = "us-east-1"
+destination_region = "us-west-2"
+alert_email        = "replace-with-your-email@example.com"
+retention_days     = 14

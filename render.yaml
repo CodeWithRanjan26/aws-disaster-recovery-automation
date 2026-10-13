@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: aws-disaster-recovery-console
+    env: python
+    plan: free
+    region: oregon
+    buildCommand: pip install -r requirements-dev.txt
+    startCommand: python scripts/dashboard.py
+    envVars:
+      - key: PORT
+        value: 8080
+      - key: PYTHON_VERSION
+        value: 3.12.0
